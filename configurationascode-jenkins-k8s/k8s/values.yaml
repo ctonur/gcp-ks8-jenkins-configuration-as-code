@@ -58,18 +58,23 @@ master:
             - script: >
                 job('pipeline-hello') {
                   triggers {
-                    // This trigger will be overwritten, it's just here to auto-trigger _one_ build.
+                    //  it's just here to auto-trigger build.
                     cron('H/5 * * * *')
                   }
                   scm {
                     git {
                       remote {
-                        url ('https://github.com/ctonur/k8sConfigurationAsCode.git')
+                        url ('https://github.com/ctonur/gcp-ks8-jenkins-configuration-as-code.git')
                         credentials('jenkins-github-ssh')
                       }
                     }
                   }
-                  scriptPath("gcloud/Jenkinsfile")
+                  steps {
+                    dsl {
+                      external('**/**/*.groovy')
+                      removeAction('DELETE')
+                    }
+                  }
                 }
 
           security:
