@@ -47,7 +47,7 @@ pipeline {
                     sh "docker rm -vf app-${BUILD_NUMBER}"
                 }
                 success {
-                    sh "docker login -u ${DOCKER_PRIVATE_USR} -p Onur28051985 ${PRIVATE_REGISTRY}"
+                    sh "docker login -u ${DOCKER_PRIVATE_USR} -p ${DOCKER_PRIVATE_PSW} ${PRIVATE_REGISTRY}"
                     sh "docker push ${PRIVATE_REPO}:${TAG}"
                 }
             }
