@@ -1,0 +1,87 @@
+master:
+    installPlugins:
+    - configuration-as-code:1.38
+    - credentials-binding:1.21
+    - branch-api:2.5.5
+    - config-file-provider:3.6.3
+    - ssh:2.6.1
+    - envinject:2.3.0
+    - environment-script:1.2.5
+    - jobConfigHistory:2.25
+    - rebuild:1.31
+    - git:4.2.2
+    - timestamper:1.11.2
+    - job-dsl:1.77
+    - workflow-aggregator:2.6
+    - kubernetes:1.25.2
+    - bouncycastle-api:2.18
+
+    tag: 2.222.1
+
+    JCasC:
+      enabled: true
+      configScripts:
+        baseConfig: |
+          jenkins:
+            systemMessage: "Configured as Code"
+
+          credentials:
+            system:
+              domainCredentials:
+                - credentials:
+                    - basicSSHUserPrivateKey:
+                        scope: GLOBAL
+                        id: jenkins-github-ssh
+                        username:
+                        passphrase:
+                        description: "SSH key for GitHub"
+                        privateKeySource:
+                          directEntry:
+                            privateKey: ${JENKINS_GITHUB_SSH}
+                    - usernamePassword:
+                        scope: GLOBAL
+                        id: "dockerhub"
+                        username: "ctonur"
+                        password: ${DockerHubPassword} #Load from Environment Variable
+                        description: "Username/Password Credentials for some-user"
+
+          unclassified:
+            globalConfigFiles:
+              configs:
+                - json:
+                    id: auth-json
+                    name: auth.json
+                    comment: from jcasc
+                    content: ${JENKINS_AUTH_JSON}
+
+          jobs:
+            - script: >
+                job('pipeline-hello') {
+                  triggers {
+                    // This trigger will be overwritten, it's just here to auto-trigger _one_ build.
+                    cron('H/5 * * * *')
+                  }
+                  scm {
+                    git {
+                      remote {
+                        url ('https://github.com/ctonur/k8sConfigurationAsCode.git')
+                        credentials('jenkins-github-ssh')
+                      }
+                    }
+                  }
+                  scriptPath("gcloud/Jenkinsfile")
+                }
+
+          security:
+            globaljobdslsecurityconfiguration:
+              useScriptSecurity: false
+
+agent:
+  image: ctonur/jenkins-slave
+  tag: 4
+  AlwaysPullImage: true
+  volumes:
+   - type: HostPath
+     volumeName: docker-sock
+     hostPath: /var/run/docker.sock
+     mountPath: /var/run/docker.sock
